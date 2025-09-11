@@ -18,9 +18,10 @@ from numpy import pi
 
 from IPython.display import HTML
 
-from scipy.sparse.linalg import LinearOperator
+from scipy.sparse.linalg import LinearOperator as ScipyOperator
 from scipy.integrate import solve_ivp
 from scipy.fft import rfft, irfft
+
 
 from .utils import is_sorted, is_1d
 
@@ -36,7 +37,7 @@ class CircleWave:
 
     def __init__(
         self,
-        npoints: int,
+        kmax: int,
         /,
         *,
         radius: float = 1.0,
@@ -45,7 +46,7 @@ class CircleWave:
     ):
         """
         Args:
-            npoints: Number of points in the angular grid.
+            kmax: Maximum degree for Fourier expansions.
             radius: Radius of the circle. Default is 1.0.
             density: Density of the material. Can be a constant float or a
                 function of the angle theta. Default is 1.0.
@@ -53,7 +54,8 @@ class CircleWave:
                 function of the angle theta. Default is 1.0.
         """
 
-        self._npoints: int = npoints
+        self._kmax = kmax
+        self._npoints: int = 2 * kmax
         self._angles: np.ndarray = np.linspace(0, 2 * pi, self.npoints, endpoint=False)
         self._radius: float = radius
 
@@ -268,7 +270,7 @@ class CircleWave:
             )
             return sol.y
 
-    def propagator(self, t0: float, t1: float) -> LinearOperator:
+    def propagator(self, t0: float, t1: float) -> ScipyOperator:
         """
         Returns the propagator as a SciPy LinearOperator.
 
@@ -298,7 +300,7 @@ class CircleWave:
                 q_b, p_b = z_backward[: self.npoints], z_backward[self.npoints :]
                 return np.concatenate((p_b, -q_b))
 
-            return LinearOperator(shape, matvec=matvec, rmatvec=rmatvec, dtype=float)
+            return ScipyOperator(shape, matvec=matvec, rmatvec=rmatvec, dtype=float)
 
         else:
             integrator_options = {"method": "DOP853", "rtol": 1e-12, "atol": 1e-12}
@@ -327,7 +329,7 @@ class CircleWave:
                 q1, p1 = z1[: self.npoints], z1[self.npoints :]
                 return np.concatenate((-p1, q1))
 
-            return LinearOperator(shape, matvec=matvec, rmatvec=rmatvec, dtype=float)
+            return ScipyOperator(shape, matvec=matvec, rmatvec=rmatvec, dtype=float)
 
     def animate_solution(
         self,

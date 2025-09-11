@@ -79,7 +79,7 @@ def test_propagator_is_symplectic(homogeneous_wave, inhomogeneous_wave):
 
     rhs_h = apply_J(z_h, n_h)
     lhs_h = prop_h.T @ apply_J(prop_h @ z_h, n_h)
-    assert np.allclose(lhs_h, rhs_h, atol=1e-9)
+    assert np.allclose(lhs_h, rhs_h, rtol=1e-9)
 
     # --- Test inhomogeneous case (numerical propagator) ---
     z_i = np.random.rand(2 * inhomogeneous_wave.npoints)
@@ -89,7 +89,7 @@ def test_propagator_is_symplectic(homogeneous_wave, inhomogeneous_wave):
     rhs_i = apply_J(z_i, n_i)
     lhs_i = prop_i.T @ apply_J(prop_i @ z_i, n_i)
     # The tolerance for the numerical integrator will be lower
-    assert np.allclose(lhs_i, rhs_i, atol=1e-6)
+    assert np.allclose(lhs_i, rhs_i, rtol=1e-9)
 
 
 def test_energy_conservation_homogeneous(homogeneous_wave):

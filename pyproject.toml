@@ -14,7 +14,8 @@ dependencies = [
     "numpy (>=2.3.3,<3.0.0)",
     "ipympl (>=0.9.7,<0.10.0)",
     "pyqt6 (>=6.9.1,<7.0.0)",
-    "pyhamsys (>=0.70,<0.71)"
+    "pyhamsys (>=0.70,<0.71)",
+    "pygeoinf (>=1.2.3,<2.0.0)"
 ]
 
 [tool.poetry.group.tests]

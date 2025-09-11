@@ -4,27 +4,33 @@ from data_assimilation import (
     CircleWave,
 )
 
+from pygeoinf.symmetric_space.circle import Sobolev
+
+
+X = Sobolev.from_sobolev_parameters(2, 0.1, power_of_two=True)
+
+
 # 1. Setup the simulation
-wave_sim = CircleWave(256, rigidity=lambda th: 1 if th < 3 * np.pi / 2 else 2)
+cw = CircleWave(
+    X.kmax, rigidity=lambda th: 1 + 5 * (th - np.pi) * np.exp(-200 * (th - np.pi) ** 2)
+)
 
 
-# 2. Create an initial condition (a Gaussian pulse)
-def initial_displacement(theta):
-    return np.exp(-((theta - np.pi) ** 2) * 20)
+mu = X.heat_kernel_gaussian_measure(0.1)
 
+q0 = mu.sample()
+p0 = X.zero
 
-def initial_momentum(theta):
-    return 0.0
+z0 = np.concatenate((q0, p0))
 
-
-z0 = wave_sim.project_displacement_and_momentum(initial_displacement, initial_momentum)
+cw.plot_state(z0)
 
 
 # 3. Generate the animation object
 print("Computing and creating animation...")
-animation = wave_sim.animate_solution(
+animation = cw.animate_solution(
     z0,
-    (0, 10),
+    (0, 20),
 )
 
 # print("Saving animation to wave_animation.mp4...")
