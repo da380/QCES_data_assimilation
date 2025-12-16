@@ -1,0 +1,74 @@
+# data_assimilation/pendulum/__init__.py
+
+"""
+__init__.py for the pendulum sub-package.
+"""
+
+# Import from the local 'physics.py'
+from .physics import (
+    G,
+    wrap_angle,
+    eom_single,
+    calculate_energy_single,
+    get_single_coords,
+    eom_double,
+    calculate_energy_double,
+    get_double_coords,
+    solve_trajectory_rk45,
+    solve_trajectory_symplectic_single,
+    solve_for_distribution,
+    sample_initial_conditions,
+    advect_pdf_single,
+    eom_single_linear,
+    get_propagator_matrix_single,
+    get_linearized_system_matrix_double,
+    eom_double_linear,
+    get_propagator_matrix_double,
+)
+
+# Import from the local 'viz.py'
+from .visualise import (
+    display_animation_html,
+    plot_static_phase_space_single,
+    plot_static_phase_space_double,
+    plot_phase_space_with_statistics,
+    plot_pdf_advection_single,
+    create_animation_phase_space_single,
+    create_physical_animation_single,
+    create_physical_animation_double,
+    animate_pdf_eulerian,
+    create_combined_animation_single,
+    create_combined_animation_double,
+)
+
+__all__ = [
+    "G",
+    "wrap_angle",
+    "eom_single",
+    "calculate_energy_single",
+    "get_single_coords",
+    "eom_double",
+    "calculate_energy_double",
+    "get_double_coords",
+    "solve_trajectory_rk45",
+    "solve_trajectory_symplectic_single",
+    "solve_for_distribution",
+    "sample_initial_conditions",
+    "advect_pdf_single",
+    "eom_single_linear",
+    "get_propagator_matrix_single",
+    "get_linearized_system_matrix_double",
+    "eom_double_linear",
+    "get_propagator_matrix_double",
+    "display_animation_html",
+    "plot_static_phase_space_single",
+    "plot_static_phase_space_double",
+    "plot_phase_space_with_statistics",
+    "plot_pdf_advection_single",
+    "create_animation_phase_space_single",
+    "create_physical_animation_single",
+    "create_physical_animation_double",
+    "animate_pdf_eulerian",
+    "create_combined_animation_single",
+    "create_combined_animation_double",
+]
