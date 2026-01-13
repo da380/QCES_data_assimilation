@@ -24,6 +24,8 @@ from .physics import (
     get_linearized_system_matrix_double,
     eom_double_linear,
     get_propagator_matrix_double,
+    get_pdf_from_grid,
+    compute_normalization,
 )
 
 # Import from the local 'viz.py'
@@ -71,4 +73,6 @@ __all__ = [
     "animate_pdf_eulerian",
     "create_combined_animation_single",
     "create_combined_animation_double",
+    "get_pdf_from_grid",
+    "compute_normalization",
 ]

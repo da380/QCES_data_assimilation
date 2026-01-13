@@ -9,6 +9,8 @@ import numpy as np
 import time
 from scipy.linalg import expm
 from scipy.integrate import solve_ivp
+from scipy.interpolate import RegularGridInterpolator
+from scipy.integrate import trapezoid
 
 # --- Constants & Utilities ---
 
@@ -279,3 +281,45 @@ def advect_pdf_single(pdf_func, t_final, x_lim=(-np.pi, np.pi), y_lim=(-3, 3), r
         y_origins[0].reshape(res, res), y_origins[1].reshape(res, res)
     )
     return X, Y, pdf_initial, pdf_advected
+
+
+def get_pdf_from_grid(X, Y, Z, bounds_error=False, fill_value=0.0):
+    """
+    Creates a continuous PDF function by interpolating discrete grid values.
+    Ensures axes are in correct order for scipy solvers.
+    """
+    # RegularGridInterpolator requires 1D coordinate arrays in strictly increasing order
+    theta_axis = X[0, :]
+    p_axis = Y[:, 0]
+
+    # We provide Z such that Z[i, j] corresponds to (theta[i], p[j])
+    # Since your grid Z is likely (p_index, theta_index), we transpose it
+    interp = RegularGridInterpolator(
+        (theta_axis, p_axis),
+        Z.T,
+        bounds_error=bounds_error,
+        fill_value=fill_value,
+        method="linear",
+    )
+
+    def pdf_func(theta, p):
+        # advect_pdf_single often passes arrays of theta and p;
+        # we must reshape them into (N, 2) for the interpolator
+        pts = np.column_stack([np.atleast_1d(theta).ravel(), np.atleast_1d(p).ravel()])
+        val = interp(pts)
+        return val.reshape(np.shape(theta)) if np.ndim(theta) > 0 else val[0]
+
+    return pdf_func
+
+
+def compute_normalization(X, Y, Z_unnorm):
+    """
+    Computes the 2D integral of an unnormalized PDF using the trapezoidal rule.
+    """
+    # Identify spacing from the grid
+    d_theta = X[0, 1] - X[0, 0]
+    d_p = Y[1, 0] - Y[0, 0]
+
+    # Integrate over p (axis 0) then theta (axis 1)
+    integral = trapezoid(trapezoid(Z_unnorm, dx=d_p, axis=0), dx=d_theta)
+    return integral

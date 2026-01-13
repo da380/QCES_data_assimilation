@@ -49,7 +49,7 @@ def plot_static_phase_space_single(phase_space_evolution, t_points):
 
     p_max = np.max(np.abs(phase_space_evolution[:, 1, :])) * 1.1
     ax1.set_ylim([-p_max, p_max])
-    plt.suptitle("Single Pendulum Phase Space Evolution", fontsize=16)
+    plt.suptitle("Single Pendulum State Space Evolution", fontsize=16)
     plt.tight_layout()
     plt.show()
 
@@ -171,7 +171,7 @@ def plot_phase_space_with_statistics(phase_space_evolution, t_points):
     ax2.grid(True)
     ax2.legend()
 
-    plt.suptitle("Phase Space Evolution with Statistics", fontsize=16)
+    plt.suptitle("State Space Evolution with Statistics", fontsize=16)
     plt.tight_layout()
     plt.show()
 
@@ -195,7 +195,7 @@ def plot_pdf_advection_single(X, Y, pdf_initial, pdf_final, t_final):
 
     cbar = fig.colorbar(c2, ax=[ax1, ax2], orientation="vertical", fraction=0.05)
     cbar.set_label("Probability Density")
-    fig.suptitle("Conservation of Probability (Liouville's Theorem)", fontsize=16)
+    fig.suptitle("Push-forward of the prior distribution", fontsize=16)
     plt.show()
 
 
@@ -437,7 +437,7 @@ def create_combined_animation_single(t_points, solution, L=1.0, stride=1):
     )
     ax_phase.set_ylim(np.min(p) - 0.1 * range_p, np.max(p) + 0.1 * range_p)
     ax_phase.set_title("Phase Space Trajectory")
-    ax_phase.set_xlabel(r"$\theta$ (rad)")
+    ax_phase.set_xlabel(r"$\theta$")
     ax_phase.set_ylabel(r"$p$")
     ax_phase.grid(True)
 
