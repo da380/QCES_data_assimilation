@@ -2,7 +2,7 @@
 visualise.py
 
 A module for visualizing the pendulum systems defined in pendulum_physics.
-Handles static plots, phase space animations, and physical space animations.
+Handles static plots, state space animations, and physical space animations.
 """
 
 import numpy as np
@@ -22,15 +22,15 @@ def display_animation_html(anim):
     return HTML(anim.to_jshtml())
 
 
-# --- Static Phase Space Plots ---
+# --- Static State Space Plots ---
 
 
-def plot_static_phase_space_single(phase_space_evolution, t_points):
-    """Plots the single pendulum phase space at t=0 and final time."""
-    theta_0 = phys.wrap_angle(phase_space_evolution[:, 0, 0])
-    p_theta_0 = phase_space_evolution[:, 1, 0]
-    theta_final = phys.wrap_angle(phase_space_evolution[:, 0, -1])
-    p_theta_final = phase_space_evolution[:, 1, -1]
+def plot_static_state_space_single(state_space_evolution, t_points):
+    """Plots the single pendulum state space at t=0 and final time."""
+    theta_0 = phys.wrap_angle(state_space_evolution[:, 0, 0])
+    p_theta_0 = state_space_evolution[:, 1, 0]
+    theta_final = phys.wrap_angle(state_space_evolution[:, 0, -1])
+    p_theta_final = state_space_evolution[:, 1, -1]
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6), sharey=True)
 
@@ -47,24 +47,24 @@ def plot_static_phase_space_single(phase_space_evolution, t_points):
     ax2.set_xlim([-np.pi, np.pi])
     ax2.grid(True)
 
-    p_max = np.max(np.abs(phase_space_evolution[:, 1, :])) * 1.1
+    p_max = np.max(np.abs(state_space_evolution[:, 1, :])) * 1.1
     ax1.set_ylim([-p_max, p_max])
     plt.suptitle("Single Pendulum State Space Evolution", fontsize=16)
     plt.tight_layout()
     plt.show()
 
 
-def plot_static_phase_space_double(phase_space_evolution, t_points):
-    """Plots the double pendulum phase space projections at t=0 and final time."""
-    th1_0 = phys.wrap_angle(phase_space_evolution[:, 0, 0])
-    p1_0 = phase_space_evolution[:, 2, 0]
-    th2_0 = phys.wrap_angle(phase_space_evolution[:, 1, 0])
-    p2_0 = phase_space_evolution[:, 3, 0]
+def plot_static_state_space_double(state_space_evolution, t_points):
+    """Plots the double pendulum state space projections at t=0 and final time."""
+    th1_0 = phys.wrap_angle(state_space_evolution[:, 0, 0])
+    p1_0 = state_space_evolution[:, 2, 0]
+    th2_0 = phys.wrap_angle(state_space_evolution[:, 1, 0])
+    p2_0 = state_space_evolution[:, 3, 0]
 
-    th1_f = phys.wrap_angle(phase_space_evolution[:, 0, -1])
-    p1_f = phase_space_evolution[:, 2, -1]
-    th2_f = phys.wrap_angle(phase_space_evolution[:, 1, -1])
-    p2_f = phase_space_evolution[:, 3, -1]
+    th1_f = phys.wrap_angle(state_space_evolution[:, 0, -1])
+    p1_f = state_space_evolution[:, 2, -1]
+    th2_f = phys.wrap_angle(state_space_evolution[:, 1, -1])
+    p2_f = state_space_evolution[:, 3, -1]
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6), sharey=True)
 
@@ -85,15 +85,15 @@ def plot_static_phase_space_double(phase_space_evolution, t_points):
     ax2.grid(True)
     ax2.legend()
 
-    p_max = np.max(np.abs(phase_space_evolution[:, 2:, :])) * 1.1
+    p_max = np.max(np.abs(state_space_evolution[:, 2:, :])) * 1.1
     ax1.set_ylim([-p_max, p_max])
-    plt.suptitle("Double Pendulum Phase Space Projections", fontsize=16)
+    plt.suptitle("Double Pendulum State Space Projections", fontsize=16)
     plt.tight_layout()
     plt.show()
 
 
-def plot_phase_space_with_statistics(phase_space_evolution, t_points):
-    """Plots initial and final phase space with overlaid statistics."""
+def plot_state_space_with_statistics(state_space_evolution, t_points):
+    """Plots initial and final state space with overlaid statistics."""
 
     def get_stats(states):
         mean = np.mean(states, axis=0)
@@ -118,11 +118,11 @@ def plot_phase_space_with_statistics(phase_space_evolution, t_points):
         )
         ax.add_patch(ell)
 
-    all_p = phase_space_evolution[:, 1, :]
+    all_p = state_space_evolution[:, 1, :]
     p_limit = np.max(np.abs(all_p)) * 1.1
 
-    initial_states = phase_space_evolution[:, :, 0]
-    final_states = phase_space_evolution[:, :, -1]
+    initial_states = state_space_evolution[:, :, 0]
+    final_states = state_space_evolution[:, :, -1]
 
     init_mean, init_cov, init_std = get_stats(initial_states)
     final_mean, final_cov, final_std = get_stats(final_states)
@@ -183,14 +183,14 @@ def plot_pdf_advection_single(X, Y, pdf_initial, pdf_final, t_final):
     )
 
     ax1.contourf(X, Y, pdf_initial, levels=25, cmap="viridis")
-    ax1.set_title("Initial PDF (t=0)")
-    ax1.set_xlabel(r"$\theta$ (rad)")
-    ax1.set_ylabel(r"$p_\theta$")
+    ax1.set_title("Prior PDF (t=0)")
+    ax1.set_xlabel(r"$\theta$ ")
+    ax1.set_ylabel(r"$p$")
     ax1.grid(True, alpha=0.3)
 
     c2 = ax2.contourf(X, Y, pdf_final, levels=25, cmap="viridis")
-    ax2.set_title(f"Advected PDF (t={t_final:.1f}s)")
-    ax2.set_xlabel(r"$\theta$ (rad)")
+    ax2.set_title(f"Prior PDF (t={t_final:.1f}s)")
+    ax2.set_xlabel(r"$\theta$")
     ax2.grid(True, alpha=0.3)
 
     cbar = fig.colorbar(c2, ax=[ax1, ax2], orientation="vertical", fraction=0.05)
@@ -202,10 +202,10 @@ def plot_pdf_advection_single(X, Y, pdf_initial, pdf_final, t_final):
 # --- Animations ---
 
 
-def create_animation_phase_space_single(phase_space_evolution, t_points):
-    """Animation of single pendulum phase space ensemble."""
+def create_animation_state_space_single(state_space_evolution, t_points):
+    """Animation of single pendulum state space ensemble."""
     fig, ax = plt.subplots(figsize=(8, 6))
-    p_max = np.max(np.abs(phase_space_evolution[:, 1, :])) * 1.1
+    p_max = np.max(np.abs(state_space_evolution[:, 1, :])) * 1.1
     ax.set_xlim([-np.pi, np.pi])
     ax.set_ylim([-p_max, p_max])
     ax.set_xlabel(r"$\theta$ (rad)")
@@ -214,7 +214,7 @@ def create_animation_phase_space_single(phase_space_evolution, t_points):
 
     scatter = ax.scatter([], [], alpha=0.5, s=5)
     time_text = ax.text(0.05, 0.9, "", transform=ax.transAxes, fontsize=12)
-    fig.suptitle("Phase Space Evolution (Single Pendulum)", fontsize=16)
+    fig.suptitle("StateSpace Evolution (Single Pendulum)", fontsize=16)
 
     def init():
         scatter.set_offsets(np.empty((0, 2)))
@@ -224,8 +224,8 @@ def create_animation_phase_space_single(phase_space_evolution, t_points):
     def animate(i):
         data = np.stack(
             [
-                phys.wrap_angle(phase_space_evolution[:, 0, i]),
-                phase_space_evolution[:, 1, i],
+                phys.wrap_angle(state_space_evolution[:, 0, i]),
+                state_space_evolution[:, 1, i],
             ]
         ).T
         scatter.set_offsets(data)
@@ -341,7 +341,7 @@ def create_physical_animation_double(t_points, solution, L1, L2):
     return anim
 
 
-def animate_pdf_eulerian(
+def animate_pdf(
     pdf_func, t_max, x_lim=(-np.pi, np.pi), y_lim=(-3, 3), res=100, frames=60
 ):
     """
@@ -365,9 +365,9 @@ def animate_pdf_eulerian(
     fig, ax = plt.subplots(figsize=(8, 6), constrained_layout=True)
     ax.set_xlim(x_lim)
     ax.set_ylim(y_lim)
-    ax.set_xlabel(r"$\theta$ (rad)")
-    ax.set_ylabel(r"$p_\theta$")
-    ax.set_title("PDF Evolution (Eulerian View)")
+    ax.set_xlabel(r"$\theta$")
+    ax.set_ylabel(r"$p$")
+    ax.set_title("PDF Evolution")
 
     Z = pdf_func(X, Y)
     mesh = ax.pcolormesh(X, Y, Z, cmap="viridis", shading="gouraud")
@@ -404,7 +404,7 @@ def create_combined_animation_single(t_points, solution, L=1.0, stride=1):
     """
     Creates a side-by-side animation:
     Left: Physical pendulum motion.
-    Right: Phase space trajectory.
+    Right: Statespace trajectory.
 
     Args:
         stride (int): Only render every nth frame to speed up generation.
@@ -415,7 +415,7 @@ def create_combined_animation_single(t_points, solution, L=1.0, stride=1):
 
     x_pend, y_pend = phys.get_single_coords(theta, L)
 
-    fig, (ax_phys, ax_phase) = plt.subplots(
+    fig, (ax_phys, ax_state) = plt.subplots(
         1, 2, figsize=(12, 6), constrained_layout=True
     )
 
@@ -429,42 +429,42 @@ def create_combined_animation_single(t_points, solution, L=1.0, stride=1):
     (rod_line,) = ax_phys.plot([], [], "k-", lw=2)
     (bob_point,) = ax_phys.plot([], [], "o", color="firebrick", markersize=15, zorder=5)
 
-    # --- Right Plot: Phase Space ---
+    # --- Right Plot: StateSpace ---
     range_theta = np.ptp(theta)
     range_p = np.ptp(p)
-    ax_phase.set_xlim(
+    ax_state.set_xlim(
         np.min(theta) - 0.1 * range_theta, np.max(theta) + 0.1 * range_theta
     )
-    ax_phase.set_ylim(np.min(p) - 0.1 * range_p, np.max(p) + 0.1 * range_p)
-    ax_phase.set_title("Phase Space Trajectory")
-    ax_phase.set_xlabel(r"$\theta$")
-    ax_phase.set_ylabel(r"$p$")
-    ax_phase.grid(True)
+    ax_state.set_ylim(np.min(p) - 0.1 * range_p, np.max(p) + 0.1 * range_p)
+    ax_state.set_title("State Space Trajectory")
+    ax_state.set_xlabel(r"$\theta$")
+    ax_state.set_ylabel(r"$p$")
+    ax_state.grid(True)
 
-    (phase_curve,) = ax_phase.plot([], [], "-", color="royalblue", lw=1.5, alpha=0.6)
-    (phase_head,) = ax_phase.plot([], [], "o", color="royalblue", markersize=8)
+    (state_curve,) = ax_state.plot([], [], "-", color="royalblue", lw=1.5, alpha=0.6)
+    (state_head,) = ax_state.plot([], [], "o", color="royalblue", markersize=8)
 
     time_text = ax_phys.text(0.05, 0.9, "", transform=ax_phys.transAxes)
 
     def init():
         rod_line.set_data([], [])
         bob_point.set_data([], [])
-        phase_curve.set_data([], [])
-        phase_head.set_data([], [])
+        state_curve.set_data([], [])
+        state_head.set_data([], [])
         time_text.set_text("")
-        return rod_line, bob_point, phase_curve, phase_head, time_text
+        return rod_line, bob_point, state_curve, state_head, time_text
 
     def update(frame):
         # Update Physical Pendulum
         rod_line.set_data([0, x_pend[frame]], [0, y_pend[frame]])
         bob_point.set_data([x_pend[frame]], [y_pend[frame]])
 
-        # Update Phase Space
-        phase_curve.set_data(theta[: frame + 1], p[: frame + 1])
-        phase_head.set_data([theta[frame]], [p[frame]])
+        # Update State Space
+        state_curve.set_data(theta[: frame + 1], p[: frame + 1])
+        state_head.set_data([theta[frame]], [p[frame]])
 
         time_text.set_text(f"Time = {t_points[frame]:.1f}s")
-        return rod_line, bob_point, phase_curve, phase_head, time_text
+        return rod_line, bob_point, state_curve, state_head, time_text
 
     # Generate indices based on stride
     frames = range(0, len(t_points), stride)
@@ -481,7 +481,7 @@ def create_combined_animation_double(t_points, solution, L1, L2, stride=1):
     """
     Creates a side-by-side animation for the Double Pendulum:
     Left: Physical motion.
-    Right: Phase space trajectories (wrapped to [-pi, pi]).
+    Right: State space trajectories (wrapped to [-pi, pi]).
 
     Args:
         stride (int): Only render every nth frame for speed.
@@ -508,7 +508,7 @@ def create_combined_animation_double(t_points, solution, L1, L2, stride=1):
     x1, y1, x2, y2 = phys.get_double_coords(solution[0, :], solution[1, :], L1, L2)
 
     # 4. Setup Figure
-    fig, (ax_phys, ax_phase) = plt.subplots(
+    fig, (ax_phys, ax_state) = plt.subplots(
         1, 2, figsize=(14, 6), constrained_layout=True
     )
 
@@ -529,31 +529,31 @@ def create_combined_animation_double(t_points, solution, L1, L2, stride=1):
     )
     ax_phys.legend(loc="upper right", fontsize="small")
 
-    # --- Right: Phase Space ---
+    # --- Right: State Space ---
     # Fixed limits for [-pi, pi]
-    ax_phase.set_xlim(-np.pi, np.pi)
+    ax_state.set_xlim(-np.pi, np.pi)
 
     # Dynamic Y limits based on momentum
     all_p = np.concatenate([p1, p2])
     range_p = np.ptp(all_p)
-    ax_phase.set_ylim(np.min(all_p) - 0.1 * range_p, np.max(all_p) + 0.1 * range_p)
+    ax_state.set_ylim(np.min(all_p) - 0.1 * range_p, np.max(all_p) + 0.1 * range_p)
 
-    ax_phase.set_title(r"Phase Space (Wrapped $[-\pi, \pi]$)")
-    ax_phase.set_xlabel(r"$\theta$ (rad)")
-    ax_phase.set_ylabel(r"$p$")
-    ax_phase.grid(True)
+    ax_state.set_title(r"State Space (Wrapped $[-\pi, \pi]$)")
+    ax_state.set_xlabel(r"$\theta$ (rad)")
+    ax_state.set_ylabel(r"$p$")
+    ax_state.grid(True)
 
     # Trails (using the NaN-injected arrays)
-    (trail1,) = ax_phase.plot(
+    (trail1,) = ax_state.plot(
         [], [], "-", color="blue", lw=1, alpha=0.5, label=r"Bob 1"
     )
-    (head1,) = ax_phase.plot([], [], "o", color="blue", markersize=6)
+    (head1,) = ax_state.plot([], [], "o", color="blue", markersize=6)
 
-    (trail2,) = ax_phase.plot(
+    (trail2,) = ax_state.plot(
         [], [], "-", color="green", lw=1, alpha=0.5, label=r"Bob 2"
     )
-    (head2,) = ax_phase.plot([], [], "o", color="green", markersize=6)
-    ax_phase.legend(loc="upper right", fontsize="small")
+    (head2,) = ax_state.plot([], [], "o", color="green", markersize=6)
+    ax_state.legend(loc="upper right", fontsize="small")
 
     time_text = ax_phys.text(0.05, 0.9, "", transform=ax_phys.transAxes)
 
@@ -574,7 +574,7 @@ def create_combined_animation_double(t_points, solution, L1, L2, stride=1):
         bob1.set_data([x1[frame]], [y1[frame]])
         bob2.set_data([x2[frame]], [y2[frame]])
 
-        # Update Phase Space
+        # Update State Space
         # Plot the trail using the version with NaNs
         trail1.set_data(th1_plot[: frame + 1], p1[: frame + 1])
         head1.set_data([th1[frame]], [p1[frame]])
