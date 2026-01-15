@@ -12,8 +12,9 @@ from matplotlib.collections import LineCollection
 from matplotlib.patches import Ellipse
 from IPython.display import HTML
 
-# Import physics to access coords, wrapping, and solvers for on-the-fly animations
+
 from . import physics as phys
+from . import assimilation as assim
 
 
 def display_animation_html(anim):
@@ -385,7 +386,7 @@ def animate_pdf(
         else:
             # Integrate backwards: current_time -> 0
             t_span = [current_time, 0.0]
-            sol = phys.solve_trajectory_rk45(
+            sol = phys.solve_trajectory(
                 vectorized_eom, y_grid_vectorized, t_span, rtol=1e-4, atol=1e-4
             )
             origins = sol[:, -1].reshape(2, res, res)
@@ -592,3 +593,52 @@ def create_combined_animation_double(t_points, solution, L1, L2, stride=1):
     )
     plt.close(fig)
     return anim
+
+
+def plot_bayesian_analysis(
+    X,
+    Y,
+    prior,
+    likelihood,
+    posterior,
+    obs_val,
+    obs_time,
+    state_labels=(r"$\theta$", r"$p$"),
+):
+    """
+    Plots the Prior, Likelihood, and Analysis (Posterior) in a 3-panel layout.
+    Replicates the visualization from the assimilation notebook.
+    """
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5), sharey=True)
+
+    # 1. Prior: The advected PDF before observation
+    im1 = axes[0].contourf(X, Y, prior, levels=30, cmap="viridis")
+    axes[0].set_title(f"Prior PDF (t={obs_time:.1f}s)")
+    fig.colorbar(im1, ax=axes[0])
+
+    # 2. Likelihood: The constraint provided by data
+    im2 = axes[1].contourf(X, Y, likelihood, levels=30, cmap="plasma")
+    axes[1].axvline(
+        obs_val,
+        color="white",
+        linestyle="--",
+        alpha=0.6,
+        label=rf"Obs {state_labels[0]}={obs_val}",
+    )
+    axes[1].set_title("Likelihood")
+    axes[1].legend()
+    fig.colorbar(im2, ax=axes[1])
+
+    # 3. Analysis: The state after Bayesian conditioning
+    im3 = axes[2].contourf(X, Y, posterior, levels=30, cmap="viridis")
+    axes[2].set_title(f"Posterior PDF (t={obs_time:.1f}s)")
+    fig.colorbar(im3, ax=axes[2])
+
+    for ax in axes:
+        ax.set_xlabel(state_labels[0])
+        ax.grid(alpha=0.2)
+
+    axes[0].set_ylabel(state_labels[1])
+
+    plt.tight_layout()
+    plt.show()

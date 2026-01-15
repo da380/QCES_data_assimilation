@@ -1,78 +1,34 @@
-# data_assimilation/pendulum/__init__.py
-
 """
-__init__.py for the pendulum sub-package.
+Pendulum Data Assimilation Package.
+
+A collection of modules for simulating and assimilating data into
+pendulum systems. Common solvers and utilities from 'core' are
+exposed directly here for convenience.
+
+Modules:
+    core   - Dimension-agnostic solvers, statistics, and math utilities.
+    single - The 2D Single Pendulum (Hamiltonian dynamics, Grid-based DA).
+    double - The 4D Double Pendulum (Chaotic dynamics, Particle-based DA).
 """
 
-# Import from the local 'physics.py'
-from .physics import (
-    G,
+# 1. Expose Submodules
+from . import core
+from . import single
+from . import double
+
+# 2. Expose Common Core Utilities (Shortcuts)
+from .core import (
+    # Solvers
+    solve_trajectory,
+    solve_ensemble,
+    # Statistics & Math
     wrap_angle,
-    eom_single,
-    calculate_energy_single,
-    get_single_coords,
-    eom_double,
-    calculate_energy_double,
-    get_double_coords,
-    solve_trajectory_rk45,
-    solve_trajectory_symplectic_single,
-    solve_for_distribution,
-    sample_initial_conditions,
-    advect_pdf_single,
-    eom_single_linear,
-    get_propagator_matrix_single,
-    get_linearized_system_matrix_double,
-    eom_double_linear,
-    get_propagator_matrix_double,
     get_pdf_from_grid,
     compute_normalization,
-)
-
-# Import from the local 'viz.py'
-from .visualise import (
+    marginalise_grid,
+    # Bayesian Inference
+    bayesian_update,
+    gaussian_likelihood,
+    # Visualisation Helpers
     display_animation_html,
-    plot_static_state_space_single,
-    plot_static_state_space_double,
-    plot_state_space_with_statistics,
-    plot_pdf_advection_single,
-    create_animation_state_space_single,
-    create_physical_animation_single,
-    create_physical_animation_double,
-    animate_pdf,
-    create_combined_animation_single,
-    create_combined_animation_double,
 )
-
-__all__ = [
-    "G",
-    "wrap_angle",
-    "eom_single",
-    "calculate_energy_single",
-    "get_single_coords",
-    "eom_double",
-    "calculate_energy_double",
-    "get_double_coords",
-    "solve_trajectory_rk45",
-    "solve_trajectory_symplectic_single",
-    "solve_for_distribution",
-    "sample_initial_conditions",
-    "advect_pdf_single",
-    "eom_single_linear",
-    "get_propagator_matrix_single",
-    "get_linearized_system_matrix_double",
-    "eom_double_linear",
-    "get_propagator_matrix_double",
-    "display_animation_html",
-    "plot_static_state_space_single",
-    "plot_static_state_space_double",
-    "plot_state_space_with_statistics",
-    "plot_pdf_advection_single",
-    "create_animation_state_space_single",
-    "create_physical_animation_single",
-    "create_physical_animation_double",
-    "animate_pdf",
-    "create_combined_animation_single",
-    "create_combined_animation_double",
-    "get_pdf_from_grid",
-    "compute_normalization",
-]
