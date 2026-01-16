@@ -172,7 +172,7 @@ def plot_pdf(
     ax=None,
     title="Probability Density",
     xlabel=r"$\theta$ ",
-    ylabel=r"$p$ (momentum)",
+    ylabel=r"$p$ ",
     cmap="viridis",
 ):
     """
