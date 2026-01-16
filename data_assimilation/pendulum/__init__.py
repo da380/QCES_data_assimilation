@@ -27,6 +27,7 @@ from .core import (
     compute_normalization,
     marginalise_grid,
     # Bayesian Inference
+    get_independent_gaussian_func,
     bayesian_update,
     gaussian_likelihood,
     # Visualisation Helpers

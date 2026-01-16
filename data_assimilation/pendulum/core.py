@@ -123,7 +123,7 @@ def advect_pdf_grid(eom_func, pdf_func, t_final, grid_limits, resolution, eom_ar
 
     t_span = [t_final, 0.0]
     sol = solve_trajectory(
-        vectorized_eom, y0_vectorized, t_span, args=(), rtol=1e-5, atol=1e-5
+        vectorized_eom, y0_vectorized, t_span, args=(), rtol=1e-9, atol=1e-9
     )
 
     origins_flat = sol[:, -1]
@@ -143,6 +143,38 @@ def advect_pdf_grid(eom_func, pdf_func, t_final, grid_limits, resolution, eom_ar
 # --- Bayesian Tools ---
 
 
+def get_independent_gaussian_func(means, stds):
+    """
+    Factory that returns a callable PDF function for independent Gaussians.
+
+    Args:
+        means: List or array of means [mu_1, mu_2, ...]
+        stds:  List or array of standard deviations [sigma_1, sigma_2, ...]
+
+    Returns:
+        A function pdf(*args) that takes N arguments and returns the probability density.
+    """
+    means = np.array(means)
+    stds = np.array(stds)
+
+    def pdf_func(*args):
+        # args is a tuple of grids or values: (theta, p, ...)
+        # We assume independent variables, so P(x,y) = P(x)P(y)
+
+        # Calculate prob for each dimension
+        total_prob = 1.0
+        for i, val in enumerate(args):
+            mu = means[i]
+            sigma = stds[i]
+            # Standard Gaussian formula
+            prob = np.exp(-0.5 * ((val - mu) / sigma) ** 2)
+            total_prob *= prob
+
+        return total_prob
+
+    return pdf_func
+
+
 def gaussian_likelihood(x_grid, obs_value, obs_std):
     """Computes Gaussian likelihood on a grid."""
     return norm.pdf(x_grid, loc=obs_value, scale=obs_std)
@@ -155,6 +187,54 @@ def bayesian_update(prior_grid, likelihood_grid, grid_axes):
     if evidence == 0:
         return posterior_unnorm, 0.0
     return posterior_unnorm / evidence, evidence
+
+
+def assimilate_cycle(
+    t_obs,
+    observations,
+    obs_std,
+    prior_func,
+    forecast_func,
+    analysis_func,
+    grid_to_func_wrapper,
+):
+    """
+    Generic Grid-Based Assimilation Cycle.
+
+    Args:
+        prior_func: Callable f(grids) -> Z_initial.
+        forecast_func: Callable f(current_pdf_func, dt) -> Z_forecast.
+        analysis_func: Callable f(Z_forecast, obs_val, obs_std) -> (Z_posterior, evidence).
+        grid_to_func_wrapper: Callable f(Z_grid) -> next_pdf_func.
+
+    Returns:
+        List of results dictionaries.
+    """
+    results = []
+    current_pdf_func = prior_func
+    t_prev = 0.0
+
+    for i, t_now in enumerate(t_obs):
+        obs_val = observations[i]
+        dt = t_now - t_prev
+
+        # 1. FORECAST (Generic)
+        # Evolve probability from t_prev to t_now
+        Z_forecast = forecast_func(current_pdf_func, dt)
+
+        # 2. ANALYSIS (Generic)
+        # Update belief based on new observation
+        Z_posterior, evidence = analysis_func(Z_forecast, obs_val, obs_std)
+
+        # 3. Store
+        results.append({"time": t_now, "posterior": Z_posterior, "evidence": evidence})
+
+        # 4. Prepare Next Step
+        # Convert grid back to function for the next forecast
+        current_pdf_func = grid_to_func_wrapper(Z_posterior)
+        t_prev = t_now
+
+    return results
 
 
 # --- Generic Visualization Helpers ---

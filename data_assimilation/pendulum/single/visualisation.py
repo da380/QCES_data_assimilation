@@ -11,6 +11,7 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.collections import LineCollection
 from matplotlib.patches import Ellipse
 
+
 from .. import core
 from . import physics as phys
 
@@ -36,7 +37,7 @@ def plot_bayesian_analysis(X, Y, prior, likelihood, posterior, obs_val, obs_time
     def plot_panel(ax, data, title, cmap="viridis"):
         im = ax.contourf(X, Y, data, levels=30, cmap=cmap)
         ax.set_title(title)
-        ax.set_xlabel(r"$\theta$ (rad)")
+        ax.set_xlabel(r"$\theta$ ")
         ax.grid(True, alpha=0.3)
         return im
 
@@ -90,7 +91,7 @@ def plot_phase_portrait(ensemble_trajectories, t_points, title=None):
     ax2.set_title(f"Final Distribution (t = {t_points[-1]:.1f}s)")
 
     for ax in (ax1, ax2):
-        ax.set_xlabel(r"$\theta$ (rad)")
+        ax.set_xlabel(r"$\theta$ ")
         ax.set_xlim([-np.pi, np.pi])
         ax.set_ylim([-p_max, p_max])
         ax.grid(True, alpha=0.3)
@@ -155,13 +156,122 @@ def plot_ensemble_stats(ensemble_trajectories, t_points):
     for ax in (ax1, ax2):
         ax.set_xlim([-np.pi, np.pi])
         ax.set_ylim([-p_max, p_max])
-        ax.set_xlabel(r"$\theta$ (rad)")
+        ax.set_xlabel(r"$\theta$ ")
         ax.set_ylabel(r"$p_\theta$")
         ax.grid(True)
         ax.legend()
 
     plt.tight_layout()
     plt.show()
+
+
+def plot_pdf(
+    X,
+    Y,
+    Z,
+    ax=None,
+    title="Probability Density",
+    xlabel=r"$\theta$ ",
+    ylabel=r"$p$ (momentum)",
+    cmap="viridis",
+):
+    """
+    Simple helper to plot a 2D PDF contour.
+
+    Args:
+        X, Y: Meshgrids of coordinates.
+        Z: Density values.
+        ax: Matplotlib axes to plot on. If None, creates a new figure.
+        title: Plot title.
+        xlabel, ylabel: Axis labels.
+        cmap: Colormap.
+
+    Returns:
+        ax: The axis object.
+        contour: The contour set (useful for adding a colorbar).
+    """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(6, 5))
+
+    contour = ax.contourf(X, Y, Z, levels=30, cmap=cmap)
+
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.grid(True, alpha=0.3)
+
+    # If we created the figure, add a colorbar automatically for convenience
+    if (
+        ax.figure.axes[-1] == ax
+    ):  # Checks if colorbar already exists usually, but simpler:
+        # Only add colorbar if we created the figure context to avoid layout issues in subplots
+        pass
+
+    return ax, contour
+
+
+def plot_trajectory_from_initial_condition(
+    y0,
+    t_max,
+    obs_data=None,
+    physics_params=None,
+    ax=None,
+    color="k",
+    label="Trajectory",
+    dt_render=0.02,
+):
+    """
+    Plots a smooth trajectory starting from y0, optionally overlaying observations.
+
+    Args:
+        y0 (array): Initial state [theta, p] at t=0.
+        t_max (float): End time for the plot.
+        obs_data (tuple): Optional (t_obs, y_obs, y_std) for scatter plot.
+        physics_params (dict): L, m, g.
+        ax (matplotlib.axes): Axis to plot on.
+        color (str): Color of the smooth line.
+        label (str): Legend label.
+        dt_render (float): Time step for the smooth curve integration.
+    """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+    # 1. Generate Smooth Curve (Integrate Physics)
+    # We create a dense time array from 0 to t_max
+    t_smooth = np.arange(0, t_max + dt_render / 2, dt_render)
+
+    # Package args for the solver
+    L, m, g = physics_params["L"], physics_params["m"], physics_params["g"]
+
+    # Solve trajectory
+    # Note: We assume y0 is at t=0. If your simulation starts elsewhere,
+    # you'd need a t_start argument.
+    sol = core.solve_trajectory(phys.eom, y0, t_smooth, args=(L, m, g))
+    theta_smooth = sol[0, :]
+
+    # 2. Plot the Smooth Line
+    ax.plot(t_smooth, theta_smooth, color=color, lw=2, label=label)
+
+    # 3. Overlay Observations (if provided)
+    if obs_data is not None:
+        t_obs, y_obs, y_std = obs_data
+        ax.errorbar(
+            t_obs,
+            y_obs,
+            yerr=y_std,
+            fmt="o",
+            color="red",
+            alpha=0.6,
+            capsize=3,
+            markersize=5,
+            label="Observations",
+        )
+
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel(r"$\theta$ (rad)")
+    ax.grid(True, alpha=0.3)
+
+    return ax
 
 
 # --- Animations ---
@@ -224,7 +334,7 @@ def animate_phase_portrait(ensemble_trajectories, t_points):
 
     ax.set_xlim([-np.pi, np.pi])
     ax.set_ylim([-p_max, p_max])
-    ax.set_xlabel(r"$\theta$ (rad)")
+    ax.set_xlabel(r"$\theta$ ")
     ax.set_ylabel(r"$p_\theta$")
     ax.grid(True)
     ax.set_title("Phase Space Evolution")
@@ -302,4 +412,99 @@ def animate_combined(t_points, solution, L=1.0, stride=1):
         return line, trace, head, time_text
 
     frames = range(0, len(t_points), stride)
-    return FuncAnimation(fig, update, frames=frames, interval=30, blit=True)
+    anim = FuncAnimation(fig, update, frames=frames, interval=30, blit=True)
+
+    plt.close(fig)
+
+    return anim
+
+
+def animate_advection(
+    pdf_func,
+    t_points,
+    res=100,
+    x_lim=(-np.pi, np.pi),
+    y_lim=(-2.5, 2.5),
+    title="Advection",
+    L=1.0,
+    m=1.0,
+    g=1.0,
+):  # <--- Note g=1.0 default
+    """
+    Lazy-evaluation animation of PDF advection (Liouville).
+    Computes each frame on the fly by integrating backwards from t to 0.
+
+    Args:
+        pdf_func: Callable prior f(theta, p).
+        t_points: Array of time points to animate.
+        res: Grid resolution.
+        x_lim, y_lim: Plot limits.
+        L, m, g: Physics parameters. Default g=1.0 for normalized smooth animation.
+    """
+    # 1. Setup Grid
+    x_vals = np.linspace(x_lim[0], x_lim[1], res)
+    y_vals = np.linspace(y_lim[0], y_lim[1], res)
+    X, Y = np.meshgrid(x_vals, y_vals)
+
+    # Pre-calculate flattened grid for the solver
+    # Stack X and Y, then flatten to 1D array [x0, x1... p0, p1...]
+    grid_flat = np.stack([X.ravel(), Y.ravel()])
+    y_grid_vectorized = grid_flat.reshape(-1)
+
+    # 2. Define Vectorized EOM Wrapper
+    # This maps the flat solver state back to (2, N) for the physics engine
+    def vectorized_eom(t, y_flat):
+        y_reshaped = y_flat.reshape(2, -1)
+        dydt = phys.eom(t, y_reshaped, L=L, m=m, g=g)
+        return np.concatenate(dydt).reshape(-1)
+
+    # 3. Setup Figure
+    fig, ax = plt.subplots(figsize=(7, 6))
+    ax.set_xlim(x_lim)
+    ax.set_ylim(y_lim)
+    ax.set_xlabel(r"$\theta$ ")
+    ax.set_ylabel(r"$p$")
+    ax.grid(True, alpha=0.3)
+
+    # Initial Plot (t=0)
+    Z_0 = pdf_func(X, Y)
+    # shading='gouraud' creates a smooth interpolated look
+    mesh = ax.pcolormesh(X, Y, Z_0, cmap="viridis", shading="gouraud")
+
+    fig.colorbar(mesh, ax=ax, label="Probability Density")
+    title_text = ax.set_title(f"{title} (t={t_points[0]:.2f})")
+
+    # 4. Update Function (The "Lazy" Part)
+    def update(frame_idx):
+        current_t = t_points[frame_idx]
+
+        # Frame 0 is always just the Prior
+        if frame_idx == 0 or current_t == 0:
+            Z_new = pdf_func(X, Y)
+        else:
+            # Backwards Integration: Solve from current_t -> 0
+            t_span = [current_t, 0.0]
+
+            sol = core.solve_trajectory(
+                vectorized_eom, y_grid_vectorized, t_span, rtol=1e-4, atol=1e-4
+            )
+
+            # The solution at t=0 is the LAST column of the output
+            final_state_flat = sol[:, -1]
+
+            # Reshape back to (2, res, res) to get origin coordinates
+            origins = final_state_flat.reshape(2, res, res)
+
+            # Sample the Prior at these origin points
+            Z_new = pdf_func(origins[0], origins[1])
+
+        # Update the plot data
+        mesh.set_array(Z_new.ravel())
+        title_text.set_text(f"{title} (t={current_t:.2f})")
+
+        return mesh, title_text
+
+    # 5. Create Animation
+    anim = FuncAnimation(fig, update, frames=len(t_points), interval=50, blit=False)
+    plt.close(fig)
+    return anim

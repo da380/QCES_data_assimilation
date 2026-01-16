@@ -37,7 +37,7 @@ def eom(t, y, L=1.0, m=1.0, g=1.0):
     # d(p)/dt = -dH/dtheta = -m g L sin(theta)
     d_p_theta = -m * g * L * np.sin(theta)
 
-    return [d_theta, d_p_theta]  #
+    return [d_theta, d_p_theta]
 
 
 def get_coords(theta, L=1.0):
@@ -47,7 +47,7 @@ def get_coords(theta, L=1.0):
     # Standard pendulum convention: 0 is down.
     x = L * np.sin(theta)
     y = -L * np.cos(theta)
-    return x, y  #
+    return x, y
 
 
 # --- 2. Tangent Linear Model (Dynamic Linearization) ---
@@ -111,10 +111,10 @@ def eom_linear(t, y, L=1.0, m=1.0, g=1.0):
     Here the Jacobian is constant because cos(0) = 1.
     """
     a = 1.0 / (m * L**2)
-    b = -m * g * L  # cos(0) = 1
+    b = -m * g * L
 
     A = np.array([[0, a], [b, 0]])
-    return A @ y  #
+    return A @ y
 
 
 def get_linear_propagator(t, L=1.0, m=1.0, g=1.0):
@@ -132,7 +132,7 @@ def get_linear_propagator(t, L=1.0, m=1.0, g=1.0):
     m01 = sin_t / (m * L**2 * omega)
     m10 = -m * g * L * sin_t / omega
 
-    return np.array([[cos_t, m01], [m10, cos_t]])  #
+    return np.array([[cos_t, m01], [m10, cos_t]])
 
 
 # Alias for explicit clarity if requested by init files
