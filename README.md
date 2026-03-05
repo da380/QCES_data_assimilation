@@ -32,7 +32,7 @@ If you do not have Poetry installed, follow the [official documentation](https:/
 ### 2. Clone and Setup
 Clone the repository and install the environment:
 ```bash
-git clone [https://github.com/da380/QCES_data_assimilation.git](https://github.com/da380/QCES_data_assimilation.git)
+git clone https://github.com/da380/QCES_data_assimilation.git
 cd data_assimilation
 poetry install
 poetry run jupyter notebook
